@@ -1,56 +1,36 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
-import json
-import os
-
-TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-TMDB_IMG_BASE_URL = 'https://image.tmdb.org/t/p/w154'
-LB_BASE_URL = "https://letterboxd.com"
+import re
 
 
-def get_movie_poster_url(title: str, year: str | int = "") -> str:
-    """Returns the URL for the movie's poster"""
-
-    """If (title, year) is not in databse, do an api request to
-    TMDB to fetch url, then store in database the (title, year, url).
-    Otherwise, just fetch from DB."""
-
-    if (title, year) in ["database"]:
-        # fetch from databse
-        raise NotImplementedError("")
-    else:
-        response = requests.get(
-            f"https://api.themoviedb.org/3/search/movie?query={title}&include_adult=false&language=en-US&page=1&year={year}&api_key={TMDB_API_KEY}",
-            headers={"accept": "application/json"}
-        )
-        # TODO: store in DB
-
-    return (
-        TMDB_IMG_BASE_URL +
-        json.loads(response.text)["results"][0]["poster_path"]
-    )
+def get_movie_poster_url(slug: str, k: str = "") -> str:
+    res = requests.get(f"https://letterboxd.com/ajax/poster/film/{slug}/std/230x345/?k={k}")
+    result = re.search('src="(.*)" srcset=', res.text)
+    return result.group(1)
 
 
 def get_user_diary_entries(username: str, page: int) -> list[dict]:
     '''Returns the diary entries
     in letterboxd.com/<username>/films/diary/<page>'''
 
-    url = f"{LB_BASE_URL}/{username}/films/diary/page/{page}"
+    url = f"https://letterboxd.com/{username}/films/diary/page/{page}"
     res = requests.get(url)
+
+    if not res.ok:
+        """Username does not exist"""
+        return []
+
     soup = BeautifulSoup(res.text, "html.parser")
 
-    # Movie info (title, year & poster url)
-    movie_titles = [i.text for i in soup.find_all("h3", class_="headline-3")]
-
-    movie_release_years = [
-        i.text
-        for i in soup.find_all("td", class_="td-released")
+    movie_slug_and_cache_key = [
+        (i["data-film-slug"], i["data-cache-busting-key"])
+        for i in soup.find_all("div", class_="film-poster")
     ]
 
     movie_poster_urls = [
-        get_movie_poster_url(m, y)
-        for m, y in list(zip(movie_titles, movie_release_years))
+        get_movie_poster_url(slug, k)
+        for slug, k in movie_slug_and_cache_key
     ]
 
     diary_entry_months = []
@@ -65,7 +45,7 @@ def get_user_diary_entries(username: str, page: int) -> list[dict]:
 
     diary_entry_dates = [
         " ".join(d)
-        for d in list(zip(diary_entry_days, diary_entry_months))
+        for d in zip(diary_entry_days, diary_entry_months)
     ]
 
     diary_entry_dates = [
@@ -76,11 +56,10 @@ def get_user_diary_entries(username: str, page: int) -> list[dict]:
     return [
         {
             "diary_entry_date": diary_entry_dates[i],
-            "movie_title": movie_titles[i],
-            "movie_release_year": movie_release_years[i],
+            "movie_slug": movie_slug_and_cache_key[i][0],
             "movie_poster_url": movie_poster_urls[i]
         }
-        for i in range(len(movie_titles))
+        for i in range(len(movie_poster_urls))
     ]
 
 
