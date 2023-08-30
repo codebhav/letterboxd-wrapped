@@ -1,13 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
-import re
 
 
 def get_movie_poster_url(slug: str, k: str = "") -> str:
+    print(f"Getting movie poster url for: {slug, k} ...")
     res = requests.get(f"https://letterboxd.com/ajax/poster/film/{slug}/std/230x345/?k={k}")
-    result = re.search('src="(.*)" srcset=', res.text)
-    return result.group(1)
+    soup = BeautifulSoup(res.text, "html.parser")
+    return soup.find("img", class_="image")["src"]
 
 
 def get_user_diary_entries(username: str, page: int) -> list[dict]:
