@@ -13,7 +13,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/collage/")
 @app.route("/collage")
 def collage():
     username = request.args.get("username", "")
@@ -25,10 +24,9 @@ def collage():
     return "Username not provided."
 
 
-@app.route("/user-diary/")
 @app.route("/user-diary")
 def user_diary():
     username = request.args.get("username", "")
     if username:
-        return scraper.get_user_diary_entries(username, 1)
+        return scraper.get_last_n_days_of_movies_in_diary(username, 30)
     return "Username not provided."
