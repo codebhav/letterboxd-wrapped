@@ -6,54 +6,26 @@
 {% endblock %}
 
 {% block content %}
-    <style type="text/css">
-        #loader {
-            border: 0.5rem solid #f3f3f3; /* Light grey */
-            border-top: 0.5rem solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 2rem;
-            height: 2rem;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <pre>{{ username }}</pre>
 
-
-    <h1>Collage for {{ username }}</h1>
-
-    <div id="collage-container">
-        <!-- movie posters here -->
-    </div>
+    <img id="target" src="">
 
     <div id="loader"></div> 
 
-
     <script type="text/javascript">
-        const create_imgs = (entries) => {
-            let imgs = []
-            let temp
-            entries.forEach(e => {
-                temp = document.createElement("img")
-                temp.setAttribute("src", e.movie_poster_url)
-                imgs.push(temp)
-            })
-            return imgs
-        }
-
         let loader = document.getElementById("loader")
-        let collage_container = document.getElementById("collage-container")
-        let response = fetch(`/user-diary?username={{ username }}`)
+        let img = document.getElementById("target")
+        let response = fetch("/img?username={{ username }}")
         response
-            .then(r => r.json())
-            .then(entries => {
+            .then(r => r.blob())
+            .then(blob => {
+                url = URL.createObjectURL(blob)
+                console.log(url)
+                img.src = url
                 loader.parentNode.removeChild(loader)
-                console.log(entries)
-                create_imgs(entries).forEach(i => {
-                    collage_container.appendChild(i)
-                })
+            })
+            .catch(error => {
+                console.log(`An error occured: ${error}`)
             })
     </script>
 {% endblock %}
