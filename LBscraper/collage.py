@@ -1,4 +1,5 @@
 from io import BytesIO
+import concurrent.futures
 from PIL import Image
 import requests
 
@@ -7,7 +8,8 @@ def create_collage(image_urls: list[str]):
     """Returns a PIL image"""
 
     # TODO: only fetch images that are going to be used
-    imgs = [get_img_from_url(i) for i in image_urls]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        imgs = list(executor.map(get_img_from_url, image_urls))
 
     # 5x5 grid collage
     collage_width = 5 * imgs[0].width

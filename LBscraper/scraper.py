@@ -1,10 +1,13 @@
+import datetime
+import concurrent.futures
 import requests
 from bs4 import BeautifulSoup
-import datetime
 
 
-def get_movie_poster_url(slug: str, k: str = "") -> str:
-    print(f"Getting movie poster url for: {slug, k} ...")
+def get_movie_poster_url(slug_and_k: tuple) -> str:
+    """Return the poster url based on slug"""
+    slug, k = slug_and_k
+    print(f"Getting movie poster url for: {slug, k}")
     res = requests.get(f"https://letterboxd.com/ajax/poster/film/{slug}/std/230x345/?k={k}")
     soup = BeautifulSoup(res.text, "html.parser")
     return soup.find("img", class_="image")["src"]
@@ -28,10 +31,12 @@ def get_user_diary_entries(username: str, page: int) -> list[dict]:
         for i in soup.find_all("div", class_="film-poster")
     ]
 
-    movie_poster_urls = [
-        get_movie_poster_url(slug, k)
-        for slug, k in movie_slug_and_cache_key
-    ]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        movie_poster_urls = list(executor.map(
+            get_movie_poster_url,
+            movie_slug_and_cache_key
+        ))
+
 
     diary_entry_months = []
     for i in soup.find_all("td", class_="td-calendar"):
