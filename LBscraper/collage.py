@@ -3,7 +3,9 @@ from PIL import Image
 import requests
 
 
-def create_collage(image_urls: list[str]) -> BytesIO:
+def create_collage(image_urls: list[str]):
+    """Returns a PIL image"""
+
     # TODO: only fetch images that are going to be used
     imgs = [get_img_from_url(i) for i in image_urls]
 
@@ -19,10 +21,7 @@ def create_collage(image_urls: list[str]) -> BytesIO:
             if index < len(imgs):
                 collage.paste(imgs[index], (col * imgs[0].width, row * imgs[0].height))
 
-    collage_bytesio = BytesIO()
-    collage.save(collage_bytesio, format="JPEG")
-    collage_bytesio.seek(0)
-    return collage_bytesio
+    return collage
 
 
 def get_img_from_url(url: str):

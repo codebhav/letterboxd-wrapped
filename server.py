@@ -1,3 +1,4 @@
+from io import BytesIO
 from flask import (
     Flask,
     redirect,
@@ -7,7 +8,7 @@ from flask import (
     url_for
 )
 from LBscraper import scraper
-from utils import collage as collager
+from LBscraper import collage as collager
 
 
 app = Flask(__name__)
@@ -38,8 +39,11 @@ def img():
     if username:
         entries = scraper.get_user_diary_entries(username, 1)
         urls = [e["movie_poster_url"] for e in entries]
+        collage_bytesio = BytesIO()
         img_collage = collager.create_collage(urls)
-        return send_file(img_collage, mimetype="image/JPG")
+        img_collage.save(collage_bytesio, format="JPEG")
+        collage_bytesio.seek(0)
+        return send_file(collage_bytesio, mimetype="image/JPG")
     return "Username not provided."
 
 
