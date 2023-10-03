@@ -6,6 +6,8 @@
 {% endblock %}
 
 {% block content %}
+    <a href="{{ url_for('index') }}">Home</a>
+
     <pre>{{ username }}</pre>
 
     <a id="save" href="" download="{{ username }}-collage.jpg" hidden>Save Image</a>
