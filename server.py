@@ -1,55 +1,66 @@
 from io import BytesIO
+
 from flask import (
     Flask,
+    flash,
     redirect,
     request,
     render_template,
     send_file,
     url_for
 )
-from LBscraper import scraper
-from LBscraper import collage as collager
 
+from letterboxd_scraper import LetterboxdUser, Collage
 
-app = Flask(__name__)
-
+app = Flask(
+    __name__,
+    template_folder="./app/templates",
+    static_folder="./app/static"
+)
+app.secret_key = "change this later"
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        return redirect(url_for("collage", username=request.form["username"]))
-
+        return redirect(
+            url_for(
+                "collage",
+                username=request.form["username"],
+                size=request.form["size"]
+        ))
     return render_template("index.html")
 
 
 @app.route("/collage")
 def collage():
     username = request.args.get("username", "")
+    size = request.args.get("size", 25)
     if username:
         return render_template(
             "collage.html",
-            username=username
+            username=username,
+            size=size
         )
-    return "Username not provided."
+    flash("Username not provided.")
+    return redirect(url_for("index"))
 
 
 @app.route("/img")
 def img():
     username = request.args.get("username", "")
+    size = int(request.args.get("size", 25))
     if username:
-        entries = scraper.get_user_diary_entries(username, 1)
-        urls = [e["movie_poster_url"] for e in entries]
-        collage_bytesio = BytesIO()
-        img_collage = collager.create_collage(urls)
-        img_collage.save(collage_bytesio, format="JPEG")
-        collage_bytesio.seek(0)
-        return send_file(collage_bytesio, mimetype="image/JPG")
-    return "Username not provided."
+        return send_file(create_collage(username, size), mimetype="image/JPG")
+    flash("/img requires the parameters username and size")
+    return redirect(url_for("index"))
 
 
-@app.route("/user-diary")
-def user_diary():
-    username = request.args.get("username", "")
-    if username:
-        return scraper.get_last_n_days_of_movies_in_diary(username, 30)
-    return "Username not provided."
+
+def create_collage(username, size):
+    size = (5, 5) if size == 25 else (10, 5)
+    collage = BytesIO()
+    Collage(LetterboxdUser(username)) \
+        .create(size) \
+        .save(collage, format="JPEG")
+    collage.seek(0)
+    return collage

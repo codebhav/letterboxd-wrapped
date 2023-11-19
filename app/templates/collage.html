@@ -19,7 +19,7 @@
     <script type="text/javascript">
         let loader = document.getElementById("loader")
         let img = document.getElementById("target")
-        let response = fetch("/img?username={{ username }}")
+        let response = fetch("/img?username={{ username }}&size={{ size }}")
         let save_btn = document.getElementById("save")
         response
             .then(r => r.blob())
@@ -28,6 +28,8 @@
                 console.log(url)
                 img.src = url
                 img.hidden = false
+                if ({{ size }} == 50)
+                    img.style.width = "90%"
                 loader.parentNode.removeChild(loader)
                 save_btn.href = url
                 save_btn.hidden = false

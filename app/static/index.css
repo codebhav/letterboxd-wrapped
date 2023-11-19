@@ -9,3 +9,12 @@ body {
     flex-direction: column;
     align-items: center;
 }
+
+#save {
+    font-size: 0.8rem;
+    padding: 0.2rem;
+    border-radius: 0.2rem;
+    margin-bottom: 0.7rem;
+    text-decoration: none;
+    border: 1px solid;
+}

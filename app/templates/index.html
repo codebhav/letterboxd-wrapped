@@ -14,7 +14,13 @@
     {% endwith %}
 
     <form method="POST">
-        <input type="text" name="username">
+        <input type="text" name="username" placeholder="letterboxd username">
+
+        <input id="collage-size1" type="radio" name="size" value="25" checked>
+        <label for="collage-size1">5x5</label>
+        <input id="collage-size2" type="radio" name="size" value="50">
+        <label for="collage-size2">10x5</label>
+
         <button>Submit</button>
     </form>
 
