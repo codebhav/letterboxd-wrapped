@@ -1,34 +1,41 @@
-from io import BytesIO
 import concurrent.futures
+from operator import attrgetter
+
 from PIL import Image
-import requests
+
+from .config import IMG_DIM
 
 
-def create_collage(image_urls: list[str]):
-    """Returns a PIL image"""
+class Collage:
+    def __init__(self, user):
+        self.user = user # LetterboxdUser instance
+        self.image = None
 
-    # TODO: only fetch images that are going to be used
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        imgs = list(executor.map(get_img_from_url, image_urls))
+    def __repr__(self):
+        return f"Collage(username={self.user})"
 
-    # 5x5 grid collage
-    collage_width = 5 * imgs[0].width
-    collage_height = 5 * imgs[0].height
-    collage = Image.new("RGB", (collage_width, collage_height))
+    def create(self, size: tuple[int, int]=(5, 5)):
+        """Creates the collage from user's diary. Returns a PIL Image"""
+        cols, rows = size
+        if cols * rows > 50:
+            raise NotImplementedError("Collages of more than 50 films are not yet implemented")
+        diary_entries = self.user.diary(page=1)[:cols*rows]
 
-    # TODO: options to have different grid sizes, not just 5x5
-    for row in range(5):
-        for col in range(5):
-            index = row * 5 + col
-            if index < len(imgs):
-                collage.paste(imgs[index], (col * imgs[0].width, row * imgs[0].height))
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            images = list(executor.map(
+                attrgetter("poster_image"),
+                diary_entries
+            ))
 
-    return collage
-
-
-def get_img_from_url(url: str):
-    """Creates a PIL image from url"""
-    print(f"Getting image from {url}")
-    res = requests.get(url)
-    if res.headers["Content-Type"] == "image/jpeg":
-        return Image.open(BytesIO(res.content))
+        collage_width = cols * IMG_DIM.width
+        collage_height = rows * IMG_DIM.height
+        collage = Image.new("RGB", (collage_width, collage_height))
+        for row in range(rows):
+            for col in range(cols):
+                i = row * cols + col
+                collage.paste(
+                    images[i],
+                    (col * IMG_DIM.width, row * IMG_DIM.height)
+                )
+        self.image = collage
+        return collage
