@@ -12,11 +12,7 @@ from flask import (
 
 from letterboxd_scraper import LetterboxdUser, Collage
 
-app = Flask(
-    __name__,
-    template_folder="./app/templates",
-    static_folder="./app/static"
-)
+app = Flask(__name__)
 app.secret_key = "change this later"
 
 @app.route("/", methods=["GET", "POST"])
