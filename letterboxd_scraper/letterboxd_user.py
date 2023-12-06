@@ -5,7 +5,7 @@ from .film import Film, DiaryEntry
 
 
 class LetterboxdUser:
-    def __init__(self, username: str):
+    def __init__(self, username: str, diary_filters: dict={}):
         self.username = username
         self.profile_url = f"https://letterboxd.com/{self.username}"
         self._profile_name = None
@@ -18,6 +18,12 @@ class LetterboxdUser:
         self._bio = None
         self._diary = {}
         self._four_faves = None
+        self.diary_filters = {
+            "only-films": False,
+            "hide-shorts": False,
+            "hide-tv": False,
+            "hide-docs": False
+        } | diary_filters
 
     @property
     def profile_name(self):
@@ -120,9 +126,20 @@ class LetterboxdUser:
         if str(page) in self._diary:
             return self._diary[str(page)]
 
-        print(f"Fetching diary entries on page {page}...")
+        film_filter = ""
+        for k, v in self.diary_filters.items():
+            if k == "only-films" and v:
+                film_filter = "hide-shorts%20hide-tv%20hide-docs"
+                break
+            if v:
+                film_filter += f"{k}%20"
+
+        print(f"Fetching diary entries on page {page}")
+        print(f"Filters {self.diary_filters}")
         diary_entries = []
-        res = requests.get(self.profile_url + f"/films/diary/page/{page}")
+        res = requests.get(
+            self.profile_url + f"/films/diary/page/{page}",
+            cookies={"filmFilter": film_filter.strip("%20")})
         soup = BeautifulSoup(res.text, "html.parser")
         rows = soup.find_all("tr", class_="diary-entry-row")
 
