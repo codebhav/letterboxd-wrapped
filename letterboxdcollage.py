@@ -1,4 +1,5 @@
 import argparse
+import os
 from letterboxd_scraper import LetterboxdUser, Collage
 
 if __name__ == "__main__":
@@ -49,6 +50,12 @@ if __name__ == "__main__":
             print("Invalid arguments to --size WIDTH HEIGHT")
             print("WIDTH * HEIGHT must be 50 or less")
             exit()
+
+    if not os.path.isdir("./output"):
+        os.mkdir("./output")
+
+    filename = f"{args.username}_collage_{WIDTH}x{HEIGHT}.jpg"
     Collage(LetterboxdUser(args.username, diary_filters=diary_filters)) \
         .create(size=(WIDTH, HEIGHT)) \
-        .save(f"{args.username}_collage_{WIDTH}x{HEIGHT}.jpg")
+        .save(f"./output/{filename}")
+    print(f"\n{filename} saved in output/")
