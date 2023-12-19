@@ -11,29 +11,29 @@ if __name__ == "__main__":
         help="Letterboxd username"
     )
     parser.add_argument(
-        "--size", "-s",
+        "--size",
         help="Collage size (WIDTH, HEIGHT). WIDTH * HEIGHT must be 50 or less",
         nargs=2,
         type=int,
     )
     parser.add_argument(
-        "--hide-shorts", "-hs",
+        "--hide-shorts", "-s",
         help="Exclude short films from collage",
         action="store_true"
     )
     parser.add_argument(
-        "--hide-tv", "-ht",
+        "--hide-tv", "-t",
         help="Exclude TV shows from collage",
         action="store_true"
     )
     parser.add_argument(
-        "--hide-docs", "-hd",
+        "--hide-docs", "-d",
         help="Exclude documentaries from collage",
         action="store_true"
     )
     parser.add_argument(
-        "--only-films", "-of",
-        help="Only include films in collage (exclude short films, TV shows, and documentaries)",
+        "--only-films", "-f",
+        help="Only include feature-length films in collage (exclude short films, TV shows, and documentaries)",
         action="store_true"
     )
     args = parser.parse_args()
