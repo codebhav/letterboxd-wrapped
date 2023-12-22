@@ -53,10 +53,10 @@ def img():
 
 
 def create_collage(username, size):
-    size = (5, 5) if size == 25 else (10, 5)
+    sizes = {25: (5, 5), 50: (10, 5), 100: (10, 10)}
     collage = BytesIO()
     Collage(LetterboxdUser(username)) \
-        .create(size) \
+        .create(sizes[size]) \
         .save(collage, format="JPEG")
     collage.seek(0)
     return collage
