@@ -46,9 +46,9 @@ if __name__ == "__main__":
     }
     if args.size:
         WIDTH, HEIGHT = args.size
-        if WIDTH * HEIGHT > 50:
+        if WIDTH * HEIGHT > 100:
             print("Invalid arguments to --size WIDTH HEIGHT")
-            print("WIDTH * HEIGHT must be 50 or less")
+            print("WIDTH * HEIGHT must be 100 or less")
             exit()
 
     if not os.path.isdir("./output"):

@@ -17,14 +17,18 @@ class Collage:
     def create(self, size: tuple[int, int]=(5, 5)):
         """Creates the collage from user's diary. Returns a PIL Image"""
         cols, rows = size
+
+        if cols * rows > 100:
+            raise NotImplementedError("Maximum size of collage is 10x10 or less")
+
+        diary_entries = self.user.diary(page=1)
         if cols * rows > 50:
-            raise NotImplementedError("Collages of more than 50 films are not yet implemented")
-        diary_entries = self.user.diary(page=1)[:cols*rows]
+            diary_entries.extend(self.user.diary(page=2))
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             images = list(executor.map(
                 attrgetter("poster_image"),
-                diary_entries
+                diary_entries[:cols*rows]
             ))
 
         collage_width = cols * IMG_DIM.width
