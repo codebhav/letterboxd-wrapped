@@ -19,7 +19,7 @@ class Collage:
         cols, rows = size
 
         if cols * rows > 100:
-            raise NotImplementedError("Maximum size of collage is 10x10 or less")
+            raise ValueError("Maximum size of collage is 10x10 or less")
 
         diary_entries = self.user.diary(page=1)
         if cols * rows > 50:
