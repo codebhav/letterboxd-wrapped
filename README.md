@@ -1,6 +1,6 @@
-# Letterboxd Collage Maker
+# Letterboxd Collage Generator
 
-Scraping user profiles [Letterboxd.com](https://letterboxd.com) and creating collages from user diaries.
+Scraping user profiles from [Letterboxd.com](https://letterboxd.com) and creating collages from user diaries.
 
 ![letterboxd-collage.jpg](https://geraldsaberon.github.io/images/letterboxd-collage.jpg)
 
