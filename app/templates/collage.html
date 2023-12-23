@@ -19,7 +19,7 @@
     <script type="text/javascript">
         let loader = document.getElementById("loader")
         let img = document.getElementById("target")
-        let response = fetch("/img?username={{ username }}&size={{ size }}")
+        let response = fetch(`/img${window.location.search}`)
         let save_btn = document.getElementById("save")
         response
             .then(r => r.blob())

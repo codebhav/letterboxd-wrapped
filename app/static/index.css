@@ -18,3 +18,13 @@ body {
     text-decoration: none;
     border: 1px solid;
 }
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.field {
+    padding-bottom: 1rem;
+}

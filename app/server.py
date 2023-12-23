@@ -22,7 +22,10 @@ def index():
             url_for(
                 "collage",
                 username=request.form["username"],
-                size=request.form["size"]
+                size=request.form["size"],
+                hide_shorts= False if request.form.get("shorts", default=False) else True,
+                hide_tv= False if request.form.get("tv", default=False) else True,
+                hide_docs= False if request.form.get("docs", default=False) else True,
         ))
     return render_template("index.html")
 
@@ -45,17 +48,25 @@ def collage():
 def img():
     username = request.args.get("username", "")
     size = int(request.args.get("size", 25))
+    diary_filters = {
+        "hide-shorts": True if request.args.get("hide_shorts") == "True" else False,
+        "hide-tv": True if request.args.get("hide_tv") == "True" else False,
+        "hide-docs":True if request.args.get("hide_docs") == "True" else False
+    }
     if username:
-        return send_file(create_collage(username, size), mimetype="image/JPG")
+        return send_file(
+            create_collage(username, size, diary_filters),
+            mimetype="image/JPG"
+        )
     flash("/img requires the parameters username and size")
     return redirect(url_for("index"))
 
 
 
-def create_collage(username, size):
+def create_collage(username, size, diary_filters):
     sizes = {25: (5, 5), 50: (10, 5), 100: (10, 10)}
     collage = BytesIO()
-    Collage(LetterboxdUser(username)) \
+    Collage(LetterboxdUser(username, diary_filters)) \
         .create(sizes[size]) \
         .save(collage, format="JPEG")
     collage.seek(0)
