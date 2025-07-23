@@ -1,36 +1,19 @@
-# Letterboxd Collage Generator
+work in progress...
 
-Scraping user profiles from [Letterboxd.com](https://letterboxd.com) and creating collages from user diaries.
+1. Install requirements
 
-![letterboxd-collage.jpg](https://geraldsaberon.github.io/images/letterboxd-collage.jpg)
-
-## Usage
-
-Before anything, install the dependencies.
 ```bash
 pip install -r requirements.txt
 ```
-### Command Line
-```bash
-python collage.py <username>
-```
-This, by default, creates a 5x5 collage for ```username```. To make one in a different size, supply ```WIDTH``` and ```HEIGHT``` to --size.
-```bash
-python collage.py <username> --size 10 10
-```
-The maximum collage size is 10x10.
 
-You can also use these options to filter diary entries.
-```
---hide-shorts, -s  Exclude short films from collage
---hide-tv, -t      Exclude TV shows from collage
---hide-docs, -d    Exclude documentaries from collage
---only-films, -f   Only include feature-length films in collage (exclude short films, TV shows, and documentaries)
-```
-
-### Web App
-You can use the web app too locally.
+2. Run web server version
 
 ```bash
-flask --app app/server.py run
+python -m flask --app app.wrapped_server run
+```
+
+3. Run CLI version
+
+```bash
+python wrapped_generator.py username --month 7 --year 2025
 ```

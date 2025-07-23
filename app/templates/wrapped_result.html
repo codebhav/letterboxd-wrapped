@@ -1,0 +1,90 @@
+{% extends "wrapped_base.html" %} {% block content %}
+<div style="text-align: center">
+	<a
+		href="{{ url_for('index') }}"
+		style="text-decoration: none; color: #1a1a1a; opacity: 0.7"
+	>
+		← Back to Home
+	</a>
+</div>
+
+<h1>Your Wrapped</h1>
+<p class="subtitle">{{ username }} • {{ month_name }} {{ year }}</p>
+
+<div id="loading" class="loading-text">
+	<div class="loader"></div>
+	<p>Creating your personalized wrapped image...</p>
+	<p style="font-size: 0.9rem">
+		This may take a moment while we fetch your movie posters
+	</p>
+</div>
+
+<div id="result" style="display: none">
+	<div class="preview-container">
+		<img
+			id="wrapped-img"
+			src=""
+			class="preview-img"
+			alt="Your Letterboxd Wrapped"
+		/>
+		<br />
+		<a
+			id="download-link"
+			href=""
+			download="{{ username }}-{{ month_name }}-{{ year }}-wrapped.jpg"
+			class="btn download-btn"
+		>
+			Download for Instagram 📱
+		</a>
+	</div>
+</div>
+
+<div id="error" style="display: none; text-align: center">
+	<div class="flash-message">
+		<span id="error-message"></span>
+	</div>
+	<a href="{{ url_for('index') }}" class="btn">Try Again</a>
+</div>
+
+<script>
+	async function generateWrapped() {
+		try {
+			const response = await fetch(
+				`/wrapped-img?username={{ username }}&month={{ month }}&year={{ year }}`
+			);
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(
+					errorData.error || "Failed to generate wrapped image"
+				);
+			}
+
+			const blob = await response.blob();
+			const imageUrl = URL.createObjectURL(blob);
+
+			// Hide loading, show result
+			document.getElementById("loading").style.display = "none";
+			document.getElementById("result").style.display = "block";
+
+			// Set image and download link
+			const img = document.getElementById("wrapped-img");
+			const downloadLink = document.getElementById("download-link");
+
+			img.src = imageUrl;
+			downloadLink.href = imageUrl;
+		} catch (error) {
+			console.error("Error:", error);
+
+			// Hide loading, show error
+			document.getElementById("loading").style.display = "none";
+			document.getElementById("error").style.display = "block";
+			document.getElementById("error-message").textContent =
+				error.message;
+		}
+	}
+
+	// Start generating when page loads
+	generateWrapped();
+</script>
+{% endblock %}

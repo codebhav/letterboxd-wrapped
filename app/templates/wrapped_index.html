@@ -1,0 +1,65 @@
+{% extends "wrapped_base.html" %}
+
+{% block content %}
+    <h1>Letterboxd Wrapped</h1>
+    <p class="subtitle">Create your personalized monthly movie collage for Instagram Stories</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Letterboxd Username</label>
+            <input type="text" 
+                   id="username" 
+                   name="username" 
+                   placeholder="Enter your Letterboxd username"
+                   required>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="month">Month</label>
+                    <select id="month" name="month">
+                        {% for value, name in months %}
+                            <option value="{{ value }}" 
+                                    {% if value == current_month %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <select id="year" name="year">
+                        {% for year in years %}
+                            <option value="{{ year }}" 
+                                    {% if year == current_year %}selected{% endif %}>
+                                {{ year }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn">
+            Create My Wrapped ✨
+        </button>
+    </form>
+
+    <script>
+        // Set current month/year as defaults
+        const now = new Date();
+        document.getElementById('month').value = now.getMonth() + 1;
+        document.getElementById('year').value = now.getFullYear();
+    </script>
+{% endblock %}
