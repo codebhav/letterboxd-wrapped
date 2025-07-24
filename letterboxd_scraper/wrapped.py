@@ -1,4 +1,4 @@
-# letterboxd_scraper/wrapped.py - Enhanced with rounded corners, stats, and optional ratings
+# letterboxd_scraper/wrapped.py - Enhanced with clean emoji stats like reference
 import random
 import math
 from datetime import datetime, timedelta
@@ -13,12 +13,11 @@ import requests
 from .config import IMG_DIM
 
 class LetterboxdWrapped:
-    def __init__(self, user, month=None, year=None, show_ratings=False):
+    def __init__(self, user, month=None, year=None):
         self.user = user
         self.month = month or datetime.now().month
         self.year = year or datetime.now().year
-        self.month_name = month_name[self.month]
-        self.show_ratings = show_ratings
+        self.month_name = month_name[self.month].lower()
         
         # Instagram Story dimensions
         self.width = 1080
@@ -33,29 +32,46 @@ class LetterboxdWrapped:
         self.secondary_text = "#B8C5D1"  # Light gray for secondary text
         
     def _get_font(self, size=40, bold=False):
-        """Get appropriate font based on operating system"""
+        """Get Helvetica font based on operating system"""
         try:
             system = platform.system()
             if system == "Windows":
-                font_name = "arialbd.ttf" if bold else "arial.ttf"
-                return ImageFont.truetype(font_name, size=size)
-            elif system == "Darwin":  # macOS
-                font_path = "/System/Library/Fonts/Arial.ttf"
-                if bold:
-                    font_path = "/System/Library/Fonts/Arial Bold.ttf"
-                return ImageFont.truetype(font_path, size=size)
-            else:  # Linux
+                # Try Helvetica first, then Arial as fallback
                 font_paths = [
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                    "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/TTF/DejaVuSans.ttf",
-                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+                    "HelveticaNeue.ttf" if not bold else "HelveticaNeue-Bold.ttf",
+                    "helvetica.ttf" if not bold else "helveticab.ttf", 
+                    "arial.ttf" if not bold else "arialbd.ttf"
+                ]
+                for font_path in font_paths:
+                    try:
+                        return ImageFont.truetype(font_path, size=size)
+                    except:
+                        continue
+                        
+            elif system == "Darwin":  # macOS
+                font_paths = [
+                    "/System/Library/Fonts/Helvetica.ttc",
+                    "/System/Library/Fonts/HelveticaNeue.ttc",
+                    "/System/Library/Fonts/Arial.ttf"
                 ]
                 for font_path in font_paths:
                     if Path(font_path).exists():
                         return ImageFont.truetype(font_path, size=size)
-                return ImageFont.load_default()
-        except Exception:
-            return ImageFont.load_default()
+                        
+            else:  # Linux
+                font_paths = [
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                    "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/TTF/DejaVuSans.ttf"
+                ]
+                for font_path in font_paths:
+                    if Path(font_path).exists():
+                        return ImageFont.truetype(font_path, size=size)
+                        
+        except Exception as e:
+            print(f"Font loading error: {e}")
+        
+        return ImageFont.load_default()
 
     def _get_monthly_diary_entries(self):
         """Get diary entries for the specified month and year"""
@@ -111,14 +127,11 @@ class LetterboxdWrapped:
         return monthly_entries
 
     def _calculate_stats(self, entries):
-        """Calculate interesting stats from diary entries"""
+        """Calculate stats for the clean emoji layout"""
         stats = {
             'total_movies': len(entries),
             'liked_movies': 0,
-            'rewatches': 0,
-            'average_rating': 0,
-            'top_rated_movies': [],
-            'ratings_distribution': {}
+            'average_rating': 0.0
         }
         
         ratings = []
@@ -126,10 +139,6 @@ class LetterboxdWrapped:
             # Count likes
             if entry.like:
                 stats['liked_movies'] += 1
-            
-            # Count rewatches
-            if entry.rewatch:
-                stats['rewatches'] += 1
             
             # Process ratings
             if entry.rating and entry.rating.strip():
@@ -141,25 +150,10 @@ class LetterboxdWrapped:
                 
                 if rating_value > 0:
                     ratings.append(rating_value)
-                    
-                    # Track high-rated movies (4+ stars)
-                    if rating_value >= 4.0:
-                        stats['top_rated_movies'].append({
-                            'title': entry.film_title,
-                            'rating': rating_value
-                        })
         
         # Calculate average rating
         if ratings:
             stats['average_rating'] = sum(ratings) / len(ratings)
-            
-            # Count ratings distribution
-            for rating in ratings:
-                rating_key = f"{rating:.1f}"
-                stats['ratings_distribution'][rating_key] = stats['ratings_distribution'].get(rating_key, 0) + 1
-        
-        # Sort top rated movies
-        stats['top_rated_movies'].sort(key=lambda x: x['rating'], reverse=True)
         
         return stats
 
@@ -177,47 +171,6 @@ class LetterboxdWrapped:
         
         return rounded_image
 
-    def _draw_stars_on_poster(self, poster_image, rating_str, width, height):
-        """Draw star rating overlay on bottom of poster"""
-        if not rating_str or not rating_str.strip():
-            return poster_image
-        
-        try:
-            # Create a copy of the poster to draw on
-            poster_with_rating = poster_image.copy()
-            draw = ImageDraw.Draw(poster_with_rating)
-            
-            # Create semi-transparent background for rating
-            overlay_height = 30
-            overlay_y = height - overlay_height
-            
-            # Draw dark overlay background
-            overlay_coords = [0, overlay_y, width, height]
-            draw.rectangle(overlay_coords, fill=(0, 0, 0, 180))
-            
-            # Draw stars
-            star_font_size = min(16, width // 8)  # Adjust star size based on poster width
-            try:
-                star_font = self._get_font(star_font_size, bold=True)
-            except:
-                star_font = ImageFont.load_default()
-            
-            # Center the rating text
-            rating_text = rating_str.strip()
-            bbox = draw.textbbox((0, 0), rating_text, font=star_font)
-            text_width = bbox[2] - bbox[0]
-            text_x = (width - text_width) // 2
-            text_y = overlay_y + (overlay_height - (bbox[3] - bbox[1])) // 2
-            
-            # Draw the stars in orange
-            draw.text((text_x, text_y), rating_text, fill=self.accent_color, font=star_font)
-            
-            return poster_with_rating
-            
-        except Exception as e:
-            print(f"Error adding stars to poster: {e}")
-            return poster_image
-
     def _create_professional_grid(self, images, entries, max_posters=20):
         """Create a clean, professional grid layout"""
         layout_positions = []
@@ -225,9 +178,9 @@ class LetterboxdWrapped:
         # Limit number of posters for clean design
         num_posters = min(len(images), max_posters)
         
-        # Professional spacing and margins with more room for stats
-        header_height = 380  # More room for title and stats
-        footer_height = 180  # Room for count and hearts
+        # Professional spacing and margins with room for stats
+        header_height = 350  # Reduced since stats are now horizontal 
+        footer_height = 80   # Minimal footer
         side_margin = 60     
         poster_spacing = 15  # Tighter spacing for more posters
         
@@ -280,7 +233,7 @@ class LetterboxdWrapped:
         vertical_margin = (available_height - best_config['total_grid_height']) / 2
         start_y = header_height + vertical_margin
         
-        # Create grid positions with associated entry data
+        # Create grid positions
         for i in range(num_posters):
             row = i // best_config['cols']
             col = i % best_config['cols']
@@ -292,8 +245,7 @@ class LetterboxdWrapped:
                 'x': int(x),
                 'y': int(y),
                 'width': int(best_config['poster_width']),
-                'height': int(best_config['poster_height']),
-                'entry': entries[i] if i < len(entries) else None
+                'height': int(best_config['poster_height'])
             })
         
         print(f"Created professional grid: {best_config['cols']}x{best_config['rows']} with {num_posters} posters")
@@ -303,66 +255,67 @@ class LetterboxdWrapped:
         """Resize image with high quality"""
         return image.resize((width, height), Image.Resampling.LANCZOS)
 
-    def _draw_heart_icon(self, draw, x, y, size=24, color=None):
-        """Draw a clean heart icon with specified color"""
-        heart_color = color or self.accent_color
-        
-        # Create heart shape with circles and triangle
-        left_circle = (x, y, x + size//2, y + size//2)
-        right_circle = (x + size//2, y, x + size, y + size//2)
-        
-        # Draw circles for top of heart
-        draw.ellipse(left_circle, fill=heart_color)
-        draw.ellipse(right_circle, fill=heart_color)
-        
-        # Draw triangle for bottom of heart
-        triangle_points = [
-            (x, y + size//3),
-            (x + size, y + size//3),
-            (x + size//2, y + size)
-        ]
-        draw.polygon(triangle_points, fill=heart_color)
-
-    def _draw_stats_section(self, draw, stats, y_position):
-        """Draw a beautiful stats section"""
+    def _draw_emoji_stats(self, draw, stats, y_position):
+        """Draw horizontal emoji stats layout matching reference"""
         try:
-            stats_font = self._get_font(22, bold=False)
-            stats_bold_font = self._get_font(24, bold=True)
+            # Use text symbols instead of emojis for better compatibility
+            symbol_font = self._get_font(28, bold=True)  # For symbols  
+            number_font = self._get_font(28, bold=True)  # For numbers
             
-            current_y = y_position
-            line_height = 32
             center_x = self.width // 2
             
-            # Create stats text
-            stats_to_show = []
+            # Stats data with text symbols (more reliable than emojis)
+            stats_data = [
+                ("👀", str(stats['total_movies'])),
+                ("★", f"{stats['average_rating']:.1f}" if stats['average_rating'] > 0 else "0.0"),
+                ("♥", str(stats['liked_movies']))
+            ]
             
-            if stats['average_rating'] > 0:
-                stats_to_show.append(f"★ {stats['average_rating']:.1f} average rating")
+            # Calculate total width for all stats
+            spacing_between_stats = 60  # Space between each stat group
+            stat_widths = []
             
-            if stats['liked_movies'] > 0:
-                stats_to_show.append(f"♥ {stats['liked_movies']} movies loved")
+            for symbol, value in stats_data:
+                # Calculate width of "symbol value" 
+                symbol_bbox = draw.textbbox((0, 0), symbol, font=symbol_font)
+                value_bbox = draw.textbbox((0, 0), value, font=number_font)
+                
+                symbol_width = symbol_bbox[2] - symbol_bbox[0]
+                value_width = value_bbox[2] - value_bbox[0]
+                
+                stat_width = symbol_width + 12 + value_width  # 12px between symbol and number
+                stat_widths.append(stat_width)
             
-            if stats['rewatches'] > 0:
-                stats_to_show.append(f"↻ {stats['rewatches']} rewatches")
+            # Total width of all stats
+            total_width = sum(stat_widths) + (len(stats_data) - 1) * spacing_between_stats
             
-            # Draw stats with different colors
-            colors = [self.accent_color, "#FF6B6B", self.blue_color]
+            # Starting x position to center everything
+            start_x = center_x - total_width // 2
+            current_x = start_x
             
-            for i, stat_text in enumerate(stats_to_show[:3]):  # Max 3 stats
+            # Colors for each stat
+            colors = [self.text_color, self.accent_color, "#FF6B6B"]  # white, orange, red
+            
+            for i, (symbol, value) in enumerate(stats_data):
                 color = colors[i % len(colors)]
                 
-                # Calculate position for centered text
-                bbox = draw.textbbox((0, 0), stat_text, font=stats_font)
-                text_width = bbox[2] - bbox[0]
-                text_x = center_x - text_width // 2
+                # Draw symbol
+                draw.text((current_x, y_position), symbol, fill=color, font=symbol_font)
                 
-                draw.text((text_x, current_y), stat_text, fill=color, font=stats_font)
-                current_y += line_height
+                # Calculate symbol width and draw number
+                symbol_bbox = draw.textbbox((0, 0), symbol, font=symbol_font)
+                symbol_width = symbol_bbox[2] - symbol_bbox[0]
+                
+                number_x = current_x + symbol_width + 12
+                draw.text((number_x, y_position), value, fill=self.text_color, font=number_font)
+                
+                # Move to next stat position
+                current_x += stat_widths[i] + spacing_between_stats
             
-            return current_y
+            return y_position + 40  # Return position after stats
             
         except Exception as e:
-            print(f"Error drawing stats: {e}")
+            print(f"Error drawing emoji stats: {e}")
             return y_position
 
     def create(self):
@@ -414,25 +367,18 @@ class LetterboxdWrapped:
         # Create professional grid layout
         layout_positions = self._create_professional_grid(poster_images, monthly_entries)
         
-        # Draw movie posters with rounded corners and optional ratings
+        # Draw movie posters with rounded corners
         for i, pos in enumerate(layout_positions):
             if i >= len(poster_images):
                 break
                 
             try:
                 image = poster_images[i]
-                entry = pos.get('entry')
                 
                 # Resize poster
                 processed_poster = self._resize_image_clean(
                     image, pos['width'], pos['height']
                 )
-                
-                # Add star ratings if enabled
-                if self.show_ratings and entry and entry.rating:
-                    processed_poster = self._draw_stars_on_poster(
-                        processed_poster, entry.rating, pos['width'], pos['height']
-                    )
                 
                 # Add rounded corners
                 rounded_poster = self._add_rounded_corners(processed_poster, radius=12)
@@ -460,13 +406,13 @@ class LetterboxdWrapped:
         # Redraw for text
         draw = ImageDraw.Draw(img)
         
-        # Enhanced header with better spacing
+        # Enhanced header with username
         try:
             top_padding = 80
             
-            # Main title
-            title_font = self._get_font(44, bold=True)
-            title_text = "month in movies"
+            # Main title: "username's month in movies"
+            title_font = self._get_font(38, bold=True)
+            title_text = f"{self.user.username}'s month in movies"
             title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
             title_width = title_bbox[2] - title_bbox[0]
             title_height = title_bbox[3] - title_bbox[1]
@@ -474,57 +420,21 @@ class LetterboxdWrapped:
             title_y = top_padding + 20
             draw.text((title_x, title_y), title_text, fill=self.text_color, font=title_font)
             
-            # Subtitle with accent color
-            subtitle_font = self._get_font(32, bold=True)
-            subtitle_text = f"{self.month_name.upper()} {self.year}"
+            # Subtitle with accent color  
+            subtitle_font = self._get_font(26, bold=True)
+            subtitle_text = f"{self.month_name} {self.year}"
             subtitle_bbox = draw.textbbox((0, 0), subtitle_text, font=subtitle_font)
             subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
             subtitle_x = (self.width - subtitle_width) // 2
-            subtitle_y = title_y + title_height + 20
+            subtitle_y = title_y + title_height + 15
             draw.text((subtitle_x, subtitle_y), subtitle_text, fill=self.accent_color, font=subtitle_font)
             
-            # Draw stats section
-            stats_y = subtitle_y + 45
-            final_stats_y = self._draw_stats_section(draw, stats, stats_y)
+            # Draw clean emoji stats section (HORIZONTAL layout)
+            stats_y = subtitle_y + 35
+            final_stats_y = self._draw_emoji_stats(draw, stats, stats_y)
             
         except Exception as e:
             print(f"Error drawing header: {e}")
-        
-        # Enhanced footer
-        try:
-            bottom_padding = 70
-            
-            # Movie count
-            count_font = self._get_font(28, bold=False)
-            count_text = f"I watched {len(monthly_entries)} movies."
-            count_bbox = draw.textbbox((0, 0), count_text, font=count_font)
-            count_width = count_bbox[2] - count_bbox[0]
-            count_height = count_bbox[3] - count_bbox[1]
-            count_x = (self.width - count_width) // 2
-            count_y = self.height - bottom_padding - count_height
-            draw.text((count_x, count_y), count_text, fill=self.text_color, font=count_font)
-            
-            # Enhanced hearts with proper Letterboxd colors
-            heart_size = 22
-            heart_spacing = 18
-            total_hearts_width = (3 * heart_size) + (2 * heart_spacing)
-            
-            hearts_start_x = (self.width - total_hearts_width) // 2
-            hearts_y = count_y - heart_size - 30
-            
-            # Proper Letterboxd brand colors
-            heart_colors = [
-                self.accent_color,  # Orange
-                self.green_color,   # Green  
-                self.blue_color     # Blue
-            ]
-            
-            for i in range(3):
-                heart_x = hearts_start_x + i * (heart_size + heart_spacing)
-                self._draw_heart_icon(draw, heart_x, hearts_y, heart_size, heart_colors[i])
-            
-        except Exception as e:
-            print(f"Error drawing footer: {e}")
         
         print("Enhanced Letterboxd Wrapped image created successfully!")
         return img
