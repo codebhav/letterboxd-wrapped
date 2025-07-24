@@ -1,4 +1,4 @@
-# letterboxd_scraper/wrapped.py - Professional Apple-style redesign
+# letterboxd_scraper/wrapped.py - Professional Apple-style redesign with proper padding
 import random
 import math
 from datetime import datetime, timedelta
@@ -122,9 +122,9 @@ class LetterboxdWrapped:
         # Limit number of posters for clean design
         num_posters = min(len(images), max_posters)
         
-        # Professional spacing and margins
-        header_height = 200  # Reduced for better balance
-        footer_height = 120  # Increased to accommodate movie count
+        # UPDATED: Professional spacing and margins with better padding
+        header_height = 320  # Increased to accommodate pushed down header text
+        footer_height = 160  # Adjusted for simpler footer without "for film lovers"
         side_margin = 60     # Generous side margins
         poster_spacing = 20  # Clean spacing between posters
         
@@ -208,9 +208,9 @@ class LetterboxdWrapped:
         """Resize image with high quality, no rotation"""
         return image.resize((width, height), Image.Resampling.LANCZOS)
 
-    def _draw_heart_icon(self, draw, x, y, size=24):
-        """Draw a clean heart icon with Letterboxd orange"""
-        heart_color = self.accent_color
+    def _draw_heart_icon(self, draw, x, y, size=24, color=None):
+        """Draw a clean heart icon with specified color"""
+        heart_color = color or self.accent_color
         
         # Create heart shape with circles and triangle
         left_circle = (x, y, x + size//2, y + size//2)
@@ -303,50 +303,68 @@ class LetterboxdWrapped:
         # Redraw for text
         draw = ImageDraw.Draw(img)
         
-        # Professional typography with proper hierarchy
+        # UPDATED: Professional typography with proper padding and spacing
         try:
-            # Main title - clean and prominent
+            # Professional padding from edges - pushed further down
+            top_padding = 100  # More generous top padding
+            
+            # Main title - clean and prominent with proper spacing
             title_font = self._get_font(42, bold=True)
             title_text = "LETTERBOXD WRAPPED"
             title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
             title_width = title_bbox[2] - title_bbox[0]
+            title_height = title_bbox[3] - title_bbox[1]
             title_x = (self.width - title_width) // 2
-            draw.text((title_x, 80), title_text, fill=self.text_color, font=title_font)
+            title_y = top_padding + 40  # Pushed further down from top
+            draw.text((title_x, title_y), title_text, fill=self.text_color, font=title_font)
             
-            # Subtitle with accent color
+            # Subtitle with accent color and proper spacing below title
             subtitle_font = self._get_font(36, bold=True)
             subtitle_text = f"{self.month_name.upper()} {self.year}"
             subtitle_bbox = draw.textbbox((0, 0), subtitle_text, font=subtitle_font)
             subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
             subtitle_x = (self.width - subtitle_width) // 2
-            draw.text((subtitle_x, 135), subtitle_text, fill=self.accent_color, font=subtitle_font)
+            subtitle_y = title_y + title_height + 25  # Better spacing below title
+            draw.text((subtitle_x, subtitle_y), subtitle_text, fill=self.accent_color, font=subtitle_font)
             
         except Exception as e:
             print(f"Error drawing header text: {e}")
         
-        # Clean footer design with movie count
+        # UPDATED: Clean footer design with proper padding from bottom
         try:
-            # Movie count - prominently displayed
+            # Professional padding from bottom
+            bottom_padding = 80  # Generous bottom padding
+            
+            # Movie count - positioned at bottom with good spacing
             count_font = self._get_font(28, bold=False)
             count_text = f"I watched {len(monthly_entries)} movies."
             count_bbox = draw.textbbox((0, 0), count_text, font=count_font)
             count_width = count_bbox[2] - count_bbox[0]
+            count_height = count_bbox[3] - count_bbox[1]
             count_x = (self.width - count_width) // 2
-            draw.text((count_x, self.height - 90), count_text, fill=self.text_color, font=count_font)
+            count_y = self.height - bottom_padding - count_height
+            draw.text((count_x, count_y), count_text, fill=self.text_color, font=count_font)
             
-            # Heart icon
+            # Three hearts with Letterboxd colors - positioned above movie count
             heart_size = 20
-            heart_x = (self.width - heart_size) // 2
-            heart_y = self.height - 55
-            self._draw_heart_icon(draw, heart_x, heart_y, heart_size)
+            heart_spacing = 15  # Space between hearts
+            total_hearts_width = (3 * heart_size) + (2 * heart_spacing)
             
-            # Footer text
-            footer_font = self._get_font(18, bold=False)
-            footer_text = "for film lovers"
-            footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
-            footer_width = footer_bbox[2] - footer_bbox[0]
-            footer_x = (self.width - footer_width) // 2
-            draw.text((footer_x, self.height - 25), footer_text, fill=self.text_color, font=footer_font)
+            # Center the group of hearts
+            hearts_start_x = (self.width - total_hearts_width) // 2
+            hearts_y = count_y - heart_size - 25  # 25px spacing above movie count
+            
+            # Letterboxd color palette for hearts
+            heart_colors = [
+                "#FF8000",  # Letterboxd orange
+                "#FFFFFF",  # White  
+                "#CCCCCC"   # Light gray
+            ]
+            
+            # Draw three hearts
+            for i in range(3):
+                heart_x = hearts_start_x + i * (heart_size + heart_spacing)
+                self._draw_heart_icon(draw, heart_x, hearts_y, heart_size, heart_colors[i])
             
         except Exception as e:
             print(f"Error drawing footer: {e}")
