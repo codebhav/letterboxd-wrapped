@@ -16,13 +16,14 @@ from flask import (
 
 from letterboxd_scraper import LetterboxdUser, LetterboxdWrapped
 
-app = Flask(__name__)
+# Tell Flask where to find templates
+app = Flask(__name__, template_folder='app/templates')
 app.secret_key = "letterboxd-wrapped-secret-key"
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     current_month = datetime.now().month
-    current_year = datetime.now().year  # Back to current year
+    current_year = datetime.now().year
     
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -49,7 +50,7 @@ def index():
     
     # Prepare month options for the form
     months = [(i, month_name[i]) for i in range(1, 13)]
-    years = list(range(current_year, current_year - 5, -1))  # Current year to 5 years back
+    years = list(range(current_year, current_year - 5, -1))
     
     return render_template("wrapped_index.html", 
                          months=months, 
