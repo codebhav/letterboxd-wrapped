@@ -51,6 +51,18 @@
             </div>
         </div>
 
+        <!-- New ratings option -->
+        <div class="form-group">
+            <div class="checkbox-container">
+                <input type="checkbox" id="show_ratings" name="show_ratings" value="true">
+                <label for="show_ratings" class="checkbox-label">
+                    <span class="checkbox-custom"></span>
+                    Show star ratings on posters
+                </label>
+                <p class="help-text">Display your ratings as stars at the bottom of each movie poster</p>
+            </div>
+        </div>
+
         <button type="submit" class="btn">
             Create My Wrapped ✨
         </button>
@@ -62,4 +74,65 @@
         document.getElementById('month').value = now.getMonth() + 1;
         document.getElementById('year').value = now.getFullYear();
     </script>
+
+    <style>
+        .checkbox-container {
+            margin: 20px 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 0;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 128, 0, 0.4);
+            border-radius: 4px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]:checked + .checkbox-label .checkbox-custom {
+            background: linear-gradient(135deg, #ff8000 0%, #ff6600 100%);
+            border-color: #ff8000;
+        }
+
+        input[type="checkbox"]:checked + .checkbox-label .checkbox-custom::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+            margin-left: 32px;
+            font-style: italic;
+        }
+
+        .checkbox-label:hover .checkbox-custom {
+            border-color: #ff8000;
+            background: rgba(255, 128, 0, 0.1);
+        }
+    </style>
 {% endblock %}

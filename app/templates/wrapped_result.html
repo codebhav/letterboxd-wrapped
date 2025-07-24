@@ -2,21 +2,56 @@
 <div style="text-align: center">
 	<a
 		href="{{ url_for('index') }}"
-		style="text-decoration: none; color: #1a1a1a; opacity: 0.7"
+		style="
+			text-decoration: none;
+			color: #ff8000;
+			opacity: 0.8;
+			font-weight: 500;
+		"
 	>
 		← Back to Home
 	</a>
 </div>
 
-<h1>Your Wrapped</h1>
+<h1>Your Enhanced Wrapped</h1>
 <p class="subtitle">{{ username }} • {{ month_name }} {{ year }}</p>
+
+{% if show_ratings %}
+<p
+	style="
+		text-align: center;
+		color: #00d15b;
+		font-size: 0.9rem;
+		margin-top: -10px;
+		margin-bottom: 20px;
+	"
+>
+	✨ Including star ratings on posters
+</p>
+{% endif %}
 
 <div id="loading" class="loading-text">
 	<div class="loader"></div>
 	<p>Creating your personalized wrapped image...</p>
-	<p style="font-size: 0.9rem">
-		This may take a moment while we fetch your movie posters
+	<p style="font-size: 0.9rem; opacity: 0.8">
+		Fetching movie posters and calculating stats
 	</p>
+	<div
+		style="
+			background: rgba(255, 128, 0, 0.1);
+			border-radius: 10px;
+			padding: 15px;
+			margin-top: 20px;
+		"
+	>
+		<p style="font-size: 0.85rem; color: #ff8000; margin: 0">
+			<strong>New features:</strong><br />
+			• Rounded corner posters with shadows<br />
+			• Personalized stats (avg rating, likes, rewatches)<br />
+			• Letterboxd brand colors<br />
+			• Enhanced design and typography
+		</p>
+	</div>
 </div>
 
 <div id="result" style="display: none">
@@ -25,7 +60,7 @@
 			id="wrapped-img"
 			src=""
 			class="preview-img"
-			alt="Your Letterboxd Wrapped"
+			alt="Your Enhanced Letterboxd Wrapped"
 		/>
 		<br />
 		<a
@@ -36,6 +71,16 @@
 		>
 			Download for Instagram 📱
 		</a>
+
+		<div style="margin-top: 15px; text-align: center">
+			<a
+				href="{{ url_for('index') }}"
+				class="btn"
+				style="background: rgba(255, 255, 255, 0.1); margin-top: 10px"
+			>
+				Create Another Wrapped
+			</a>
+		</div>
 	</div>
 </div>
 
@@ -49,8 +94,9 @@
 <script>
 	async function generateWrapped() {
 		try {
+			const showRatings = {{ show_ratings|lower }};
 			const response = await fetch(
-				`/wrapped-img?username={{ username }}&month={{ month }}&year={{ year }}`
+				`/wrapped-img?username={{ username }}&month={{ month }}&year={{ year }}&show_ratings=${showRatings}`
 			);
 
 			if (!response.ok) {
@@ -87,4 +133,24 @@
 	// Start generating when page loads
 	generateWrapped();
 </script>
+
+<style>
+	.preview-img {
+		border: 3px solid rgba(255, 128, 0, 0.3);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+	}
+
+	.download-btn {
+		background: linear-gradient(135deg, #00d15b 0%, #00b84f 100%);
+		font-size: 1.1rem;
+		padding: 18px 30px;
+		box-shadow: 0 8px 20px rgba(0, 209, 91, 0.3);
+	}
+
+	.download-btn:hover {
+		background: linear-gradient(135deg, #00b84f 0%, #009940 100%);
+		transform: translateY(-2px);
+		box-shadow: 0 12px 25px rgba(0, 209, 91, 0.4);
+	}
+</style>
 {% endblock %}

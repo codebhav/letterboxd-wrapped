@@ -39,13 +39,15 @@ def index():
         
         month = int(request.form.get("month", current_month))
         year = int(request.form.get("year", current_year))
+        show_ratings = request.form.get("show_ratings") == "true"
             
         return redirect(
             url_for(
                 "wrapped",
                 username=username,
                 month=month,
-                year=year
+                year=year,
+                show_ratings=show_ratings
         ))
     
     # Prepare month options for the form
@@ -63,6 +65,7 @@ def wrapped():
     username = request.args.get("username", "").strip()
     month = int(request.args.get("month", datetime.now().month))
     year = int(request.args.get("year", datetime.now().year))
+    show_ratings = request.args.get("show_ratings", "false").lower() == "true"
     
     if username:
         return render_template(
@@ -70,7 +73,8 @@ def wrapped():
             username=username,
             month=month,
             year=year,
-            month_name=month_name[month]
+            month_name=month_name[month],
+            show_ratings=show_ratings
         )
     
     flash("Username not provided.")
@@ -85,8 +89,9 @@ def wrapped_img():
     try:
         month = int(request.args.get("month", datetime.now().month))
         year = int(request.args.get("year", datetime.now().year))
+        show_ratings = request.args.get("show_ratings", "false").lower() == "true"
         
-        wrapped_io = create_wrapped_image(username, month, year)
+        wrapped_io = create_wrapped_image(username, month, year, show_ratings)
         return send_file(
             wrapped_io,
             mimetype="image/jpeg",
@@ -97,12 +102,12 @@ def wrapped_img():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-def create_wrapped_image(username, month, year):
+def create_wrapped_image(username, month, year, show_ratings=False):
     wrapped_io = BytesIO()
     
     try:
         user = LetterboxdUser(username)
-        wrapped = LetterboxdWrapped(user, month=month, year=year)
+        wrapped = LetterboxdWrapped(user, month=month, year=year, show_ratings=show_ratings)
         wrapped_image = wrapped.create()
         wrapped_image.save(wrapped_io, format="JPEG", quality=95)
         wrapped_io.seek(0)
